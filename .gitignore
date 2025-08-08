@@ -32,6 +32,7 @@ Thumbs.db
 
 # 日志与缓存
 *.log
+*.log.*
 *.sqlite3
 *.sql
 coverage/
