@@ -1,5 +1,5 @@
 from agents.model import get_tongyi_llm
-from langchain_core.prompts import ChatPromptTemplate, FewShotChatMessagePromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from utils.prompt_generator import generate_prompt
 
 llm = get_tongyi_llm()
@@ -29,14 +29,12 @@ examples = [
             "intent": "search_info",
             "condition": "市值大于 100 亿美金的纳斯达克股票"
         },
-        "output": {
-            [
-                "获取所有在纳斯达克交易所上市的股票列表",
-                "为每支股票获取其最新的市值信息",
-                "筛选出市值大于 100 亿美金（100B）的股票",
-                "整理结果，输出为包含股票代码、名称、市值的列表"
-            ]
-        }
+        "output": [
+                {"index":"0", "task":"获取所有在纳斯达克交易所上市的股票列表"},
+                {"index":"1", "task":"为每支股票获取其最新的市值信息"},
+                {"index":"2", "task":"筛选出市值大于 100 亿美金（100B）的股票"},
+                {"index":"3", "task":"整理结果，输出为包含股票代码、名称、市值的列表"}
+        ]
     },
     {
         "input": {
@@ -44,16 +42,16 @@ examples = [
             "stock": "AAPL"
         },
         "output": [
-            "获取 AAPL 股票的最新价格和历史走势数据（如近6个月）",
-            "获取 AAPL 最新财报摘要（营收、净利润、EPS、现金流等）",
-            "计算并分析关键财务指标（市盈率、净利率、同比增长等）",
-            "获取 AAPL 所在行业和市场的整体表现做对比分析",
-            "总结 AAPL 股票的当前估值、业绩表现和市场位置"
+            {"index":"0", "task":"获取 AAPL 股票的最新价格和历史走势数据（如近6个月）"},
+            {"index":"1", "task":"获取 AAPL 最新财报摘要（营收、净利润、EPS、现金流等）"},
+            {"index":"2", "task":"计算并分析关键财务指标（市盈率、净利率、同比增长等）"},
+            {"index":"3", "task":"获取 AAPL 所在行业和市场的整体表现做对比分析"},
+            {"index":"4", "task":"总结 AAPL 股票的当前估值、业绩表现和市场位置"},
         ]
     }
 ]
 
-def task_decompose(intent):
+def decompose_task(intent) -> list[dict[str, str]]:
     """
     根据用户意图分解为具体的子任务列表
 

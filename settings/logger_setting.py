@@ -3,7 +3,7 @@ import os
 from logging.handlers import TimedRotatingFileHandler
 
 def setup_logging():
-    logger = logging.getLogger("weather")
+    logger = logging.getLogger("stock-selector")
     logger.setLevel(logging.DEBUG)
 
     if not logger.handlers:
