@@ -8,5 +8,9 @@ dependencies = [
     "langchain-community>=0.3.27",
     "langgraph>=0.6.3",
     "langsmith>=0.4.12",
+    "pandas>=2.3.1",
+    "pandas-stubs==2.3.0.250703",
+    "polygon>=1.2.7",
+    "polygon-api-client>=1.15.3",
     "python-dotenv>=1.1.1",
 ]

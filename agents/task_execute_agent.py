@@ -26,7 +26,20 @@ execute_task_prompt = PromptTemplate(
 )
 
 def execute_task(task: str, previous_task: str, previous_result: str) -> dict:
+    """
+    执行给定的任务，根据上一个任务的结果进行上下文相关的处理
+
+    Args:
+        task (str): 当前需要执行的任务内容
+        previous_task (str): 上一个任务的内容，如果为初始任务则为None
+        previous_result (str): 上一个任务的执行结果，如果为初始任务则为None
+
+    Returns:
+        dict: 包含任务名和执行结果的字典，格式为 {"task": task, "result": result_content}
+    """
+    # 构造初始任务提示词
     prompt = first_execute_task_prompt.format(task_content=task)
+    # 如果存在上一个任务和结果，则使用上下文相关的提示模板
     if previous_task is not None and previous_result is not None:
         prompt = execute_task_prompt.format(
             previous_task_content=previous_task,
@@ -34,4 +47,4 @@ def execute_task(task: str, previous_task: str, previous_result: str) -> dict:
             task_content=task)
 
     task_execute_response = llm.invoke(prompt)
-    return task_execute_response.content
+    return {"task": task, "result": task_execute_response.content}

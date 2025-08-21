@@ -26,3 +26,8 @@ if "DASHSCOPE_API_KEY" not in os.environ:
     os.environ["DASHSCOPE_API_KEY"] = getpass.getpass(
         prompt="Please enter your DASHSCOPE API key: "
     )
+
+if "POLYGON_API_KEY" not in os.environ:
+    os.environ["POLYGON_API_KEY"] = getpass.getpass(
+        prompt="Please enter your Polygon API key: "
+    )
