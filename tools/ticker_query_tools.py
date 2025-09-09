@@ -96,6 +96,64 @@ def get_ticker_filter(
 
     return pass_ticker
 
+def stream_fetch_stock_tickers(
+        ticker: Optional[str] = None,
+        ticker_type: Optional[str] = None,
+        cik: Optional[str] = None,
+        market: Optional[str] = None,
+        sort: str = "filing_date",
+        order: str = "asc",
+        limit: int = 1000,
+        max_pages: Optional[int] = None,
+
+        include_tickers: Optional[Iterable[str]] = None,
+        exclude_tickers: Optional[Iterable[str]] = None,
+        ticker_regex: Optional[Union[str, Pattern]] = None,
+        ticker_predicate: Optional[TickerPred] = None,
+        numeric_filters: Optional[list[NumericFilter]] = None
+) -> Iterator[Dict[str, Any]]:
+    pages = 0
+    get_tickers_response = reference_client.get_tickers(
+        limit = limit,
+        all_pages = False,
+        max_pages = max_pages,
+        symbol = ticker,
+        symbol_type = ticker_type,
+        cik = cik,
+        market = market,
+        sort = sort,
+        order = order,
+    )
+
+    if (get_tickers_response.get("status")
+            and get_tickers_response.get("status") == "ERROR"):
+        raise Exception(f"Error fetching tickers: {get_tickers_response.get('status')}，"
+                        f"case: {get_tickers_response.get('error')}")
+
+    while get_tickers_response:
+        pages += 1
+        for ticker in (get_tickers_response.get("results") or []):
+
+            if not do_numeric_filter(ticker, numeric_filters):
+                continue
+
+            pass_ticker = get_ticker_filter(
+                include_tickers,
+                exclude_tickers,
+                ticker_regex,
+                ticker_predicate,
+            )
+
+            if pass_ticker(ticker.get("ticker"), ticker):
+                yield ticker
+
+        if max_pages is not None and pages >= max_pages:
+            break
+
+        ticker_page = reference_client.get_next_page(get_tickers_response)
+        if not ticker_page:
+            break
+
 def get_stock_tickers(
         ticker: Optional[str] = None,
         ticker_type: Optional[str] = None,
@@ -131,61 +189,3 @@ def get_stock_tickers(
     ):
         all_tickers.append(t)
     return all_tickers
-
-def stream_fetch_stock_tickers(
-        ticker: Optional[str] = None,
-        ticker_type: Optional[str] = None,
-        cik: Optional[str] = None,
-        market: Optional[str] = None,
-        sort: str = "filing_date",
-        order: str = "asc",
-        limit: int = 1000,
-        max_pages: Optional[int] = None,
-
-        include_tickers: Optional[Iterable[str]] = None,
-        exclude_tickers: Optional[Iterable[str]] = None,
-        ticker_regex: Optional[Union[str, Pattern]] = None,
-        ticker_predicate: Optional[TickerPred] = None,
-        numeric_filters: Optional[list[NumericFilter]] = None
-) -> Iterator[Dict[str, Any]]:
-    pages = 0
-    get_tickers_response = reference_client.get_tickers(
-        limit = limit,
-        all_pages = False,
-        max_pages = max_pages,
-        symbol = ticker,
-        symbol_type = ticker_type,
-        cik = cik,
-        market = market,
-        sort = sort,
-        order = order,
-    )
-
-    if (get_tickers_response.get("status")
-            and get_tickers_response.get("status") != "OK"):
-        raise Exception(f"Error fetching tickers: {get_tickers_response.get('status')}，"
-                        f"case: {get_tickers_response.get('error')}")
-
-    while get_tickers_response:
-        pages += 1
-        for ticker in (get_tickers_response.get("results") or []):
-
-            if not do_numeric_filter(ticker, numeric_filters):
-                continue
-
-            pass_ticker = get_ticker_filter(
-                include_tickers,
-                exclude_tickers,
-                ticker_regex,
-                ticker_predicate,
-            )
-
-            if pass_ticker(ticker.get("ticker"), ticker):
-                yield ticker
-
-        if max_pages is not None and pages >= max_pages:
-            break
-
-        ticker_page = reference_client.get_next_page(get_tickers_response)
-        if not ticker_page:
-            break

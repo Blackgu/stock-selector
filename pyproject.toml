@@ -8,6 +8,7 @@ dependencies = [
     "langchain-community>=0.3.27",
     "langgraph>=0.6.3",
     "langsmith>=0.4.12",
+    "openpyxl>=3.1.5",
     "pandas>=2.3.1",
     "pandas-stubs==2.3.0.250703",
     "polygon>=1.2.7",
