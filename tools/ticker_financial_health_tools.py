@@ -233,8 +233,8 @@ def get_concept_series_robust(
     *,
     synonyms: Optional[List[str]] = None,
     prefer_units: Tuple[str, ...] = ("USD", "USDm", "USDth"),
-    only_forms: Optional[List[str]] = None,
-    min_similarity: float = 0.66,
+    only_forms: Optional[List[str]] = ["10-K","10-Q","20-F","6-K"],
+    min_similarity: float = 0.8,
     required_keywords: Optional[List[str]] = None,
     deny_keywords: Optional[List[str]] = None
 ) -> pd.DataFrame:
@@ -288,7 +288,28 @@ def get_concept_series_robust(
     cols = ["fy","fp","form","end","filed","unit_key","taxonomy","tag","value"]
     return best[[c for c in cols if c in best.columns]]
 
+# ... existing code ...
 def get_revenues(cik: str) -> pd.Series:
+    """
+    获取公司收入数据序列
+
+    从SEC的XBRL数据中提取公司的收入数据，支持多种收入相关的标签匹配
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含收入数据的时间序列，包含以下列：
+            - fy: 财年
+            - fp: 财务期间
+            - form: 申报表类型
+            - end: 期末日
+            - filed: 提交日期
+            - unit_key: 单位键
+            - taxonomy: 命名空间
+            - tag: 概念名
+            - value: 收入数值
+    """
 
     REVENUE_TAGS = [
         "RevenueFromContractWithCustomerExcludingAssessedTax",
@@ -307,24 +328,42 @@ def get_revenues(cik: str) -> pd.Series:
         cik=cik,
         target_tag="Revenues",
         synonyms=REVENUE_TAGS,
-        min_similarity=0.80,
-        only_forms=["10-K","10-Q","20-F","6-K"],
         required_keywords=["revenue", "sales"],
         deny_keywords=["deferred", "contractliability", "otherincome", "interest", "dividend", "gain"]
     )
 
 def get_gross_profit(cik: str) -> pd.Series:
+    """
+    获取公司毛利润数据序列
+
+    从SEC的XBRL数据中提取公司的毛利润数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含毛利润数据的时间序列
+    """
     return get_concept_series_robust(
         cik=cik,
         target_tag="GrossProfit",
         synonyms=["GrossProfit"],
-        min_similarity=0.80,
-        only_forms=["10-K", "10-Q"],
         required_keywords=["gross", "profit"],
         deny_keywords=["net", "operating", "comprehensive"]
     )
 
 def get_cfo(cik: str) -> pd.Series:
+    """
+    获取公司经营性现金流数据序列
+
+    从SEC的XBRL数据中提取公司的经营活动产生的现金流量数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含经营性现金流数据的时间序列
+    """
 
     CFO_TAGS = [
         "NetCashProvidedByUsedInOperatingActivities",
@@ -337,13 +376,22 @@ def get_cfo(cik: str) -> pd.Series:
         cik=cik,
         target_tag="NetCashProvidedByUsedInOperatingActivities",
         synonyms=CFO_TAGS,
-        min_similarity=0.80,
-        only_forms=["10-K", "10-Q"],
         required_keywords=["cash", "operating"],
         deny_keywords=["investing", "financing", "capex", "interestpaid", "dividend"]
     )
 
 def get_capex(cik: str) -> pd.Series:
+    """
+    获取公司资本支出数据序列
+
+    从SEC的XBRL数据中提取公司的资本支出（购买固定资产支出）数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含资本支出数据的时间序列
+    """
     CAPEX_TAGS = [
         "PaymentsToAcquirePropertyPlantAndEquipment",
         "CapitalExpenditures",
@@ -355,13 +403,22 @@ def get_capex(cik: str) -> pd.Series:
         cik=cik,
         target_tag="PaymentsToAcquirePropertyPlantAndEquipment",
         synonyms=CAPEX_TAGS,
-        min_similarity=0.80,
-        only_forms=["10-K", "10-Q"],
         required_keywords=["property", "plant", "equipment", "capitalexpenditure", "capex"],
         deny_keywords=["proceeds", "sale", "disposal", "acquisitionofbusiness"]
     )
 
 def get_ebit(cik: str) -> pd.Series:
+    """
+    获取公司息税前利润(EBIT)数据序列
+
+    从SEC的XBRL数据中提取公司的息税前利润数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含息税前利润数据的时间序列
+    """
     EBIT_TAGS = [
         "OperatingIncomeLoss",
         "ProfitLossFromOperatingActivities",
@@ -373,13 +430,22 @@ def get_ebit(cik: str) -> pd.Series:
         cik=cik,
         target_tag="operatingIncomeLoss",
         synonyms=EBIT_TAGS,
-        min_similarity=0.80,
-        only_forms=["10-K", "10-Q"],
         required_keywords=["operating", "income", "profit", "ebit"],
         deny_keywords=["cash", "beforeincometaxes", "ebt", "netincome", "comprehensive", "nonoperating"]
     )
 
 def get_d_and_a(cik: str) -> pd.Series:
+    """
+    获取公司折旧与摊销数据序列
+
+    从SEC的XBRL数据中提取公司的折旧与摊销费用数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含折旧与摊销数据的时间序列
+    """
     D_AND_A_TAGS = [
         "DepreciationAndAmortization",
         "AmortizationOfIntangibleAssets",
@@ -390,18 +456,38 @@ def get_d_and_a(cik: str) -> pd.Series:
         cik=cik,
         target_tag="DepreciationDepletionAndAmortization",
         synonyms=D_AND_A_TAGS,
-        min_similarity=0.80,
-        only_forms=["10-K", "10-Q"],
         required_keywords=["depreciation", "amort"],
         deny_keywords=["accumulated", "capitalized", "capitalised", "paid", "impairment"]
     )
 
 def get_ebitda(cik: str) -> pd.Series:
+    """
+    获取公司息税折旧摊销前利润(EBITDA)数据序列
+
+    通过计算EBIT和折旧摊销之和得到EBITDA
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含息税折旧摊销前利润数据的时间序列
+    """
     ebit_df = get_ebit(cik)
     d_and_a_df = get_d_and_a(cik)
     return (ebit_df if pd.notna(ebit_df) else np.nan) + (d_and_a_df if pd.notna(d_and_a_df) else 0)
 
 def get_cash(cik: str) -> pd.Series:
+    """
+    获取公司现金及现金等价物数据序列
+
+    从SEC的XBRL数据中提取公司的现金及现金等价物数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含现金及现金等价物数据的时间序列
+    """
     CASH_TAGS = [
         "CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperations",
         "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
@@ -412,13 +498,22 @@ def get_cash(cik: str) -> pd.Series:
         cik=cik,
         target_tag="CashAndCashEquivalentsAtCarryingValue",
         synonyms=CASH_TAGS,
-        min_similarity=0.80,
-        only_forms=["10-K", "10-Q"],
         required_keywords=["cash", "equivalent"],
         deny_keywords=["asset", "investment", "shortterminvestment"]
     )
 
 def get_st_debt(cik: str) -> pd.Series:
+    """
+    获取公司短期债务数据序列
+
+    从SEC的XBRL数据中提取公司的短期债务数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含短期债务数据的时间序列
+    """
     DEBT_CURRENT = [
         "DebtCurrent",
         "ShortTermBorrowings",
@@ -432,12 +527,21 @@ def get_st_debt(cik: str) -> pd.Series:
         cik=cik,
         target_tag="DebtCurrent",
         synonyms=DEBT_CURRENT,
-        min_similarity=0.80,
-        only_forms=["10-K", "10-Q"],
         required_keywords=["debt","borrow","loan","bond","note","debenture","commercialpaper"],
         deny_keywords=["asset","lease"])
 
 def get_lt_debt(cik: str) -> pd.Series:
+    """
+    获取公司长期债务数据序列
+
+    从SEC的XBRL数据中提取公司的长期债务数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含长期债务数据的时间序列
+    """
     DEBT_LONG_TAGS = [
         "LongTermDebtNoncurrent",
         "LongtermBorrowings",
@@ -446,12 +550,21 @@ def get_lt_debt(cik: str) -> pd.Series:
         cik=cik,
         target_tag="LongTermDebtNoncurrent",
         synonyms=DEBT_LONG_TAGS,
-        min_similarity=0.80,
-        only_forms=["10-K", "10-Q"],
         required_keywords=["debt","borrow","loan","bond","note","debenture"],
         deny_keywords=["asset","lease"])
 
 def get_interest(cik: str) -> pd.Series:
+    """
+    获取公司利息费用数据序列
+
+    从SEC的XBRL数据中提取公司的利息费用数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含利息费用数据的时间序列
+    """
     INTEREST_TAGS = [
         "InterestExpense",
         "InterestExpenseOperating",
@@ -463,29 +576,155 @@ def get_interest(cik: str) -> pd.Series:
         cik=cik,
         target_tag="InterestExpense",
         synonyms=INTEREST_TAGS,
-        min_similarity=0.80,
-        only_forms=["10-K", "10-Q"],
         required_keywords=["interest", "financecost", "financecosts", "finance"],
         deny_keywords=["income", "net", "paid", "capitalized", "capitalised", "receive", "receivable"]
     )
 
-# rev = pick(fs, ("income_statement", "revenues"),
-#            ("income_statement", "salesRevenueNet"),
-#            ("income_statement", "revenueFromContractWithCustomerExcludingAssessedTax"))
-# gp = pick(fs, ("income_statement", "grossProfit"))
-# cfo = pick(fs, ("cash_flow_statement", "netCashProvidedByUsedInOperatingActivities"))
-# capex = pick(fs, ("cash_flow_statement", "paymentsToAcquirePropertyPlantAndEquipment"),
-#              ("cash_flow_statement", "purchaseOfPropertyAndEquipment"))
-# ebit = pick(fs, ("income_statement", "operatingIncomeLoss"),
-#             ("income_statement", "incomeLossFromContinuingOperationsBeforeIncomeTaxes"))
-# d_and_a = pick(fs, ("income_statement", "depreciationAndAmortization"),
-#                ("cash_flow_statement", "depreciationDepletionAndAmortization"))
-# ebitda = (ebit if pd.notna(ebit) else np.nan) + (d_and_a if pd.notna(d_and_a) else 0)
-# cash = pick(fs, ("balance_sheet", "cashAndCashEquivalentsAtCarryingValue"),
-#             ("balance_sheet", "cashCashEquivalentsAndShortTermInvestments"))
-# st_debt = pick(fs, ("balance_sheet", "debtCurrent"),
-#                ("balance_sheet", "shortTermBorrowings"))
-# lt_debt = pick(fs, ("balance_sheet", "longTermDebtNoncurrent"),
-#                ("balance_sheet", "longTermDebt"))
-# interest = pick(fs, ("income_statement", "interestExpense"))
-# period_end = it.get("end_date") or it.get("fiscal_period_end_date")
+def ttm(series_q: pd.Series, q=4):
+    """
+    计算最近q个季度的合计值（TTM - Trailing Twelve Months）
+
+    对于季度数据，计算最近q个季度的总和，通常用于计算滚动12个月的数据
+
+    参数:
+        series_q (pd.Series): 季度数据序列
+        q (int): 需要计算的季度数，默认为4个季度
+
+    返回:
+        float 或 np.nan: 如果数据点不足q个则返回NaN，否则返回最近q个季度的合计值
+    """
+    if len(series_q) < q: return np.nan
+    return float(series_q.tail(q).sum())
+
+def get_revenues_ttm(cik: str) -> pd.Series:
+    """
+    获取公司收入的TTM（滚动12个月）数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含收入TTM数据的时间序列
+    """
+    return ttm(get_revenues(cik))
+
+def get_gross_profit_ttm(cik: str) -> pd.Series:
+    """
+    获取公司毛利润的TTM（滚动12个月）数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含毛利润TTM数据的时间序列
+    """
+    return ttm(get_gross_profit(cik))
+
+def get_cfo_ttm(cik: str) -> pd.Series:
+    """
+    获取公司经营性现金流的TTM（滚动12个月）数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含经营性现金流TTM数据的时间序列
+    """
+    return ttm(get_cfo(cik))
+
+def get_capex_ttm(cik: str) -> pd.Series:
+    """
+    获取公司资本支出的TTM（滚动12个月）数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含资本支出TTM数据的时间序列
+    """
+    return ttm(get_capex(cik))
+
+def get_ebit_ttm(cik: str) -> pd.Series:
+    """
+    获取公司息税前利润的TTM（滚动12个月）数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含息税前利润TTM数据的时间序列
+    """
+    return ttm(get_ebit(cik))
+
+def get_d_and_a_ttm(cik: str) -> pd.Series:
+    """
+    获取公司折旧与摊销的TTM（滚动12个月）数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含折旧与摊销TTM数据的时间序列
+    """
+    return ttm(get_d_and_a(cik))
+
+def get_ebitda_ttm(cik: str) -> pd.Series:
+    """
+    获取公司息税折旧摊销前利润的TTM（滚动12个月）数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含息税折旧摊销前利润TTM数据的时间序列
+    """
+    return ttm(get_ebitda(cik))
+
+def get_cash_ttm(cik: str) -> pd.Series:
+    """
+    获取公司现金及现金等价物的TTM（滚动12个月）数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含现金及现金等价物TTM数据的时间序列
+    """
+    return ttm(get_cash(cik))
+
+def get_st_debt_ttm(cik: str) -> pd.Series:
+    """
+    获取公司短期债务的TTM（滚动12个月）数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含短期债务TTM数据的时间序列
+    """
+    return ttm(get_st_debt(cik))
+
+def get_lt_debt_ttm(cik: str) -> pd.Series:
+    """
+    获取公司长期债务的TTM（滚动12个月）数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含长期债务TTM数据的时间序列
+    """
+    return ttm(get_lt_debt(cik))
+
+def get_interest_ttm(cik: str) -> pd.Series:
+    """
+    获取公司利息费用的TTM（滚动12个月）数据
+
+    参数:
+        cik (str): 公司的CIK编号，可以不带前导0
+
+    返回:
+        pd.Series: 包含利息费用TTM数据的时间序列
+    """
+    return ttm(get_interest(cik))
+# ... existing code ...
